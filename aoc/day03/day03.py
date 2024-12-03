@@ -15,16 +15,16 @@ def part_1(input_file: str):
 
 def part_2(input_file: str):
     input_data = Path(__file__).with_name(input_file).read_text()
-    # pattern = re.findall(r".*?(don't\(\)|do\(\)).*?mul\((\d{1,3}),(\d{1,3})\)", input_data)
-    first_matches = re.findall(
-        r"mul\((\d{1,3}),(\d{1,3})\).*[do()|don't()]", input_data
-    )
-    # This replaces too much I guess or not enough (last don't is not replaced)
-    replaced = re.sub(r".*don't\(\).*?do\(\)", "do()", input_data)
-    replaced = re.sub(r".*don't\(\).*?", "", replaced)
-    pattern = re.findall(r"mul\((\d{1,3}),(\d{1,3})\)", replaced)
-    total = get_sum(first_matches)
-    total += get_sum(pattern)
+    pattern = re.findall(r"mul\((\d{1,3}),(\d{1,3})\)|(don't\(\)|do\(\))", input_data)
+    multiplications = []
+    enabled = True
+    for x, y, do in pattern:
+        if do:
+            enabled = do == "do()"
+            continue
+        if enabled:
+            multiplications.append((x, y))
+    total = get_sum(multiplications)
     return total
 
 
@@ -50,4 +50,5 @@ if __name__ == "__main__":
     assert result != 68841592, result
     assert result != 69854524, result
     assert result != 36601983, result
+    assert result != 18948047, result
     print(result)
