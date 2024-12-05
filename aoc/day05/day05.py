@@ -49,7 +49,8 @@ def sort_row(row: list[str], rules: dict[str, list[str]]) -> list[str]:
                 new_row.append(number)
         else:
             new_row.append(number)
-    assert len(new_row) == len(row)
+    if not is_correct_order(new_row, rules):
+        new_row = sort_row(new_row, rules)
     return new_row
 
 
@@ -71,6 +72,10 @@ def part_2(input_file: str):
     for row in incorrect:
         corrected_row = sort_row(row, rules)
         corrected.append(corrected_row)
+
+    for row in corrected:
+        if not is_correct_order(row, rules):
+            print(row)
 
     assert all(is_correct_order(row, rules) for row in corrected)
 
