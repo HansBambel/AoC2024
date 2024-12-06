@@ -74,8 +74,7 @@ def part_2(input_file: str):
     cur_pos = get_start_pos(input_data)
     facing = input_data[cur_pos[0]][cur_pos[1]]
     loops = 0
-    # Speed-up: check only placing obstacles on places that are visited on the original path
-    # From 50s to 11.5s
+    # 4x Speed-up: check only placing obstacles on places that are visited on the original path
     visited = get_path(input_data, cur_pos)
     for y, x in visited:
         if input_data[y][x] == "#":
