@@ -1,3 +1,4 @@
+import time
 from pathlib import Path
 
 
@@ -13,10 +14,7 @@ def get_start_pos(data: list[str]) -> tuple[int, int]:
     raise ValueError("no start found")
 
 
-def part_1(input_file: str):
-    data_file = Path(__file__).with_name(input_file).read_text()
-    input_data = data_file.split("\n")
-    cur_pos = get_start_pos(input_data)
+def get_path(input_data: list[str], cur_pos: tuple[int, int]) -> set[tuple[int, int]]:
     visited = {cur_pos}
     facing = input_data[cur_pos[0]][cur_pos[1]]
     direction = directions[facing]
@@ -34,6 +32,15 @@ def part_1(input_file: str):
 
         cur_pos = (y_new, x_new)
         visited.add(cur_pos)
+
+    return visited
+
+
+def part_1(input_file: str):
+    data_file = Path(__file__).with_name(input_file).read_text()
+    input_data = data_file.split("\n")
+    cur_pos = get_start_pos(input_data)
+    visited = get_path(input_data, cur_pos)
 
     return len(visited)
 
@@ -67,13 +74,15 @@ def part_2(input_file: str):
     cur_pos = get_start_pos(input_data)
     facing = input_data[cur_pos[0]][cur_pos[1]]
     loops = 0
-    for y, row in enumerate(input_data):
-        for x, item in enumerate(row):
-            if item == "#":
-                continue
-            input_data[y] = row[:x] + "#" + row[x + 1 :]
-            loops += is_loop(input_data, facing, cur_pos)
-            input_data[y] = row[:x] + "." + row[x + 1 :]
+    # Speed-up: check only placing obstacles on places that are visited on the original path
+    # From 50s to 11.5s
+    visited = get_path(input_data, cur_pos)
+    for y, x in visited:
+        if input_data[y][x] == "#":
+            continue
+        input_data[y] = input_data[y][:x] + "#" + input_data[y][x + 1 :]
+        loops += is_loop(input_data, facing, cur_pos)
+        input_data[y] = input_data[y][:x] + "." + input_data[y][x + 1 :]
 
     return loops
 
@@ -93,6 +102,8 @@ if __name__ == "__main__":
     print(result)
     assert result == 6
 
+    start_time = time.time()
     result = part_2("input.txt")
     assert result > 1573
     print(result)
+    print(f"Time: {time.time() - start_time:.4f} seconds")
