@@ -12,6 +12,8 @@ def get_antinodes_of_antennas(
         for i in range(1, max_repetitions + 1):
             antinodes.add((y + i * diff[0], x + i * diff[1]))
             antinodes.add((y - i * diff[0], x - i * diff[1]))
+    # Unsure why this difference is not needed for part 2
+    # I am assuming at once the antennas would need to be removed
     if grid_lengths is None:
         return antinodes.difference({antenna_1, antenna_2})
     return antinodes
@@ -36,6 +38,12 @@ def get_antinodes_of_frequencies(
     return antinodes
 
 
+def print_antinodes(input_data, antinodes):
+    for y, row in enumerate(input_data):
+        line = "".join("#" if (y, x) in antinodes else c for x, c in enumerate(row))
+        print(line)
+
+
 def part_1(input_file: str):
     data_file = Path(__file__).with_name(input_file).read_text()
     input_data = data_file.split("\n")
@@ -53,6 +61,7 @@ def part_1(input_file: str):
         for antinode in antinodes
         if 0 <= antinode[0] < len(input_data) and 0 <= antinode[1] < len(input_data[0])
     }
+    # print_antinodes(input_data, antinodes)
     return len(antinodes)
 
 
@@ -75,10 +84,7 @@ def part_2(input_file: str):
         for antinode in antinodes
         if 0 <= antinode[0] < len(input_data) and 0 <= antinode[1] < len(input_data[0])
     }
-    for y, row in enumerate(input_data):
-        line = "".join("#" if (y, x) in antinodes else c for x, c in enumerate(row))
-        print(line)
-
+    # print_antinodes(input_data, antinodes)
     return len(antinodes)
 
 
