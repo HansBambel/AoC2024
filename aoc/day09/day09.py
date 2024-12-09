@@ -3,7 +3,10 @@ from pathlib import Path
 
 
 def get_string(disk: dict[int, list[str]]) -> str:
-    return "".join(disk.values())
+    full_string = ""
+    for entry in disk.values():
+        full_string += "".join(entry)
+    return full_string
 
 
 def create_initial_state(input_data: str) -> OrderedDict[int, list[str]]:
@@ -43,11 +46,37 @@ def sort_disk(disk: OrderedDict[int, list[str]]) -> dict[int, list[str]]:
     return disk
 
 
+def sort_disk_part2(disk: OrderedDict[int, list[str]]) -> dict[int, list[str]]:
+    sort_index = len(disk) - 1
+    while sort_index > 0:
+        req_free_space = len(disk[sort_index])
+        if req_free_space == 0:
+            sort_index -= 1
+            continue
+        free_index = 0
+        while free_index < sort_index:
+            if disk[free_index].count(".") >= req_free_space:
+                break
+            free_index += 1
+        else:
+            sort_index -= 1
+            continue
+
+        # Find first "." in the free_index
+        dot_ind = next(i for i, c in enumerate(disk[free_index]) if c == ".")
+        disk[free_index][dot_ind : dot_ind + req_free_space] = disk[sort_index]
+        disk[sort_index] = ["."] * req_free_space
+        sort_index -= 1
+        # print(get_string(disk))
+    return disk
+
+
 def part_1(input_file: str):
     data_file = Path(__file__).with_name(input_file).read_text()
     disk = create_initial_state(data_file)
 
     sorted_disk = sort_disk(disk)
+    # print(get_string(sorted_disk))
     checksum = calculate_checksum(sorted_disk)
     return checksum
 
@@ -56,7 +85,8 @@ def part_2(input_file: str):
     data_file = Path(__file__).with_name(input_file).read_text()
     disk = create_initial_state(data_file)
 
-    sorted_disk = sort_disk(disk)
+    sorted_disk = sort_disk_part2(disk)
+    # print(get_string(sorted_disk))
     checksum = calculate_checksum(sorted_disk)
     return checksum
 
