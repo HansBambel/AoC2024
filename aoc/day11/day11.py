@@ -1,27 +1,28 @@
 from pathlib import Path
-from functools import lru_cache
-
-lru_cache(maxsize=None)
 
 
-def split_stone(stone: str) -> list[str]:
+def split_stone(stone: str) -> tuple[str, str | None]:
     if stone == "0":
-        return ["1"]
+        return "1", None
     if len(stone) % 2 == 0:
-        return [stone[: len(stone) // 2], str(int(stone[len(stone) // 2 :]))]
-    return [str(int(stone) * 2024)]
+        return stone[: len(stone) // 2], str(int(stone[len(stone) // 2 :]))
+    return str(int(stone) * 2024), None
 
 
 def part_1(input_file: str, blinks=25):
     data_file = Path(__file__).with_name(input_file).read_text()
     stones = data_file.split(" ")
+    stones = {stone: 1 for stone in stones}
     for i in range(blinks):
-        new_stones = []
+        new_stones = {}
         for stone in stones:
-            new_stones.extend(split_stone(stone))
+            stone_1, stone_2 = split_stone(stone)
+            new_stones[stone_1] = new_stones.get(stone_1, 0) + stones[stone]
+            if stone_2:
+                new_stones[stone_2] = new_stones.get(stone_2, 0) + stones[stone]
         stones = new_stones
 
-    return len(stones)
+    return sum(stones.values())
 
 
 if __name__ == "__main__":
