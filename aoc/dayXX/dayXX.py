@@ -1,12 +1,16 @@
 from pathlib import Path
 
+machines = []
+
 
 def part_1(input_file: str):
+    global machines
     data_file = Path(__file__).with_name(input_file).read_text()
     input_data = data_file.split("\n")
 
 
 def part_2(input_file: str):
+    global machines
     data_file = Path(__file__).with_name(input_file).read_text()
     input_data = data_file.split("\n")
 
