@@ -50,10 +50,42 @@ def part_1(input_file: str, seconds=100, size=(11, 7)) -> int:
     return reduce(mul, in_quadrants)
 
 
-def part_2(input_file: str):
+def part_2(input_file: str, size=(101, 103)):
     global input_data
     data_file = Path(__file__).with_name(input_file).read_text()
     input_data = data_file.split("\n")
+
+    robots = get_robots(input_data)
+    seconds = 0
+    while True:
+        seconds += 1
+        positions = [
+            (
+                (pos[0] + vel[0] * seconds) % size[0],
+                (pos[1] + vel[1] * seconds) % size[1],
+            )
+            for pos, vel in robots
+        ]
+
+        # check for a cross of #... this is just a heuristic, but it works!
+        for x, y in positions:
+            x_line_pos = [(x - 1, y), (x + 1, y), (x - 2, y), (x + 2, y)]
+            y_line_pos = [(x, y - 1), (x, y + 1), (x, y - 2), (x, y + 2)]
+            if all(pos in positions for pos in x_line_pos) and all(
+                pos in positions for pos in y_line_pos
+            ):
+                print("Seconds:", seconds)
+                print_grid(positions, size)
+
+
+def print_grid(positions, size):
+    for y in range(size[1]):
+        for x in range(size[0]):
+            if (x, y) in positions:
+                print("#", end="")
+            else:
+                print(".", end="")
+        print()
 
 
 if __name__ == "__main__":
@@ -67,9 +99,6 @@ if __name__ == "__main__":
 
     # #### Part 2 ####
     print("#" * 10 + " Part 2 " + "#" * 10)
-    result = part_2("input_ex.txt")
-    print(result)
-    assert result == 1337
 
     result = part_2("input.txt")
     print(result)
