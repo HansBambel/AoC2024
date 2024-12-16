@@ -16,8 +16,7 @@ def get_pos(input_data: list[str], character: str = "S") -> tuple[int, int]:
 def walk(
     start_pos: tuple[int, int],
     facing: Literal["^", "v", "<", ">"],
-    goal: tuple[int, int],
-) -> tuple[int, dict, str]:
+) -> tuple[dict, dict]:
     global input_data
     seen = set()
     prev = {}
@@ -28,8 +27,8 @@ def walk(
         _, next_move, facing = queue.get()
         seen.add((next_move, facing))
         y, x = next_move
-        if next_move == goal:
-            break
+        # if next_move == goal:
+        #     break
         options: list[tuple[tuple[int, int], Literal["^", "v", "<", ">"], int]] = []
         match facing:
             case "^":
@@ -57,10 +56,11 @@ def walk(
 
             if dist.get((new_pos, face), 1e9) > new_score:
                 dist[(new_pos, face)] = new_score
-                prev[(new_pos, face)] = next_move, facing
+                prev[(new_pos, face)] = [(next_move, facing)]
                 queue.put((new_score, new_pos, face))
-    smallest = dist[(goal, facing)]
-    return smallest, prev, facing
+            elif new_score == dist[(new_pos, face)]:
+                prev[(new_pos, face)].append((next_move, facing))
+    return dist, prev
 
 
 def part_1(input_file: str):
@@ -69,23 +69,37 @@ def part_1(input_file: str):
     input_data = data_file.split("\n")
     cur_pos = get_pos(input_data, "S")
     goal = get_pos(input_data, "E")
-    score, _, _ = walk(cur_pos, ">", goal)
+    dist, _ = walk(cur_pos, ">")
+    score = min(dist.get((goal, face), 1e9) for face in "^v<>")
     return score
+
+
+def get_path(prev, cur, facing, start_pos) -> list[tuple[int, int]]:
+    path = []
+    while cur != start_pos:
+        path.append(cur)
+        previous = prev[cur, facing]
+        cur, facing = previous[0]
+        for prev_pos, prev_face in previous[1:]:
+            path += get_path(prev, prev_pos, prev_face, start_pos)
+    return path
 
 
 def part_2(input_file: str):
     global input_data
     data_file = Path(__file__).with_name(input_file).read_text()
     input_data = data_file.split("\n")
-    cur_pos = get_pos(input_data, "S")
+    start_pos = get_pos(input_data, "S")
     goal = get_pos(input_data, "E")
-    _, prev, facing = walk(cur_pos, ">", goal)
-    path = []
-    cur = goal
-    while cur != cur_pos:
-        path.append(cur)
-        cur, facing = prev[cur, facing]
-    return len(list(set(path)))
+    dist, prev = walk(start_pos, ">")
+    score = min(dist.get((goal, face), 1e9) for face in "^v<>")
+    mult_paths = [face for face in "^v<>" if dist[goal, face] == score]
+    paths = []
+    for facing in mult_paths:
+        path = get_path(prev, goal, facing, start_pos)
+        paths.extend(path)
+
+    return len(list(set(paths))) + 1
 
 
 if __name__ == "__main__":
