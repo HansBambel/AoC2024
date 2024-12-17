@@ -60,37 +60,32 @@ def part_1(input_file: str):
     return ",".join(map(str, out))
 
 
+def find_solution(program: list[int], until: int, a: int) -> int | None:
+    """Reconstruct backwards. Test which 8 constellations for
+    each program part that fulfill the program until a certain point.
+    When that part is found, multiply a by 8 to "lock" the previously
+    found number and move to the next part of the program.
+    """
+    for a_n in range(8):
+        if run_operations(program, a * 8 + a_n, 0, 0) == program[until:]:
+            if until == 0:
+                # Complete match -> solution found
+                return a * 8 + a_n
+            new_a = find_solution(program, until - 1, a * 8 + a_n)
+            if new_a is not None:
+                return new_a
+    # No solution found
+    return None
+
+
 def part_2(input_file: str):
     global input_data
     data_file = Path(__file__).with_name(input_file).read_text()
     input_data = data_file.split("\n\n")
-    _, reg_b, reg_c = input_data[0].split("\n")
-    reg_b = int(reg_b.split()[-1])
-    reg_c = int(reg_c.split()[-1])
     program = list(re.findall(r"\d+", input_data[1]))
     program = [int(x) for x in program]
 
-    reg_a = 8
-    # get starting point
-    while len(program) > len(run_operations(program, reg_a, reg_b, reg_c)):
-        reg_a *= 8
-    out = ""
-    prev = 0
-    reg_a = 35942313392565
-    while out != program:
-        reg_a += 206158430208
-        try:
-            out = run_operations(program, reg_a, reg_b, reg_c)
-            until = 11
-            if out[:until] == program[:until]:
-                # if True:
-                print(reg_a, out, reg_a - prev)
-                prev = reg_a
-        except ValueError:
-            continue
-        if len(out) > len(program):
-            print("Too long")
-            break
+    reg_a = find_solution(program, len(program) - 1, 0)
     return reg_a
 
 
@@ -105,9 +100,9 @@ if __name__ == "__main__":
 
     # #### Part 2 ####
     print("#" * 10 + " Part 2 " + "#" * 10)
-    # result = part_2("input_ex2.txt")
-    # print(result)
-    # assert result == 117440
+    result = part_2("input_ex2.txt")
+    print(result)
+    assert result == 117440
 
     result = part_2("input.txt")
     print(result)
