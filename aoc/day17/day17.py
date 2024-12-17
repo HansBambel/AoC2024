@@ -4,7 +4,7 @@ from pathlib import Path
 input_data = []
 
 
-def run_operations(program, reg_a, reg_b, reg_c):
+def run_operations(program, reg_a, reg_b, reg_c) -> list[int]:
     ind = 0
     out = []
     while ind < len(program):
@@ -70,16 +70,27 @@ def part_2(input_file: str):
     program = list(re.findall(r"\d+", input_data[1]))
     program = [int(x) for x in program]
 
-    reg_a = 0
+    reg_a = 8
+    # get starting point
+    while len(program) > len(run_operations(program, reg_a, reg_b, reg_c)):
+        reg_a *= 8
     out = ""
+    prev = 0
+    reg_a = 35942313392565
     while out != program:
-        reg_a += 1
-        if reg_a % 100000 == 0:
-            print(reg_a)
+        reg_a += 206158430208
         try:
             out = run_operations(program, reg_a, reg_b, reg_c)
+            until = 11
+            if out[:until] == program[:until]:
+                # if True:
+                print(reg_a, out, reg_a - prev)
+                prev = reg_a
         except ValueError:
             continue
+        if len(out) > len(program):
+            print("Too long")
+            break
     return reg_a
 
 
@@ -94,9 +105,9 @@ if __name__ == "__main__":
 
     # #### Part 2 ####
     print("#" * 10 + " Part 2 " + "#" * 10)
-    result = part_2("input_ex2.txt")
-    print(result)
-    assert result == 117440
+    # result = part_2("input_ex2.txt")
+    # print(result)
+    # assert result == 117440
 
     result = part_2("input.txt")
     print(result)
