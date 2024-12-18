@@ -14,8 +14,8 @@ def find_path(start_pos, end_pos, blocked):
         _, next_move = queue.get()
         seen.add(next_move)
         x, y = next_move
-        # if next_move == goal:
-        #     break
+        if next_move == end_pos:
+            break
         options: list[tuple[int, int]] = [(0, 1), (0, -1), (1, 0), (-1, 0)]
 
         for dir in options:
@@ -50,15 +50,7 @@ def get_path(prev, end_pos):
     return path
 
 
-def part_1(input_file: str, end_pos=(6, 6), start_after=1024):
-    global input_data
-    data_file = Path(__file__).with_name(input_file).read_text()
-    input_data = data_file.split("\n")
-    input_data = [list(map(int, row.split(","))) for row in input_data]
-    start_pos = (0, 0)
-    blocked = [tuple(pos) for pos in input_data[:start_after]]
-    dist, prev = find_path(start_pos, end_pos, blocked)
-
+def print_path(prev, blocked, end_pos):
     path = get_path(prev, end_pos)
     for y in range(end_pos[1] + 1):
         for x in range(end_pos[0] + 1):
@@ -69,13 +61,35 @@ def part_1(input_file: str, end_pos=(6, 6), start_after=1024):
             else:
                 print(".", end="")
         print()
-    return dist[end_pos]
 
 
-def part_2(input_file: str):
+def part_1(input_file: str, end_pos=(6, 6), start_after=1024):
     global input_data
     data_file = Path(__file__).with_name(input_file).read_text()
     input_data = data_file.split("\n")
+    input_data = [list(map(int, row.split(","))) for row in input_data]
+    start_pos = (0, 0)
+    blocked = [tuple(pos) for pos in input_data[:start_after]]
+    dist, prev = find_path(start_pos, end_pos, blocked)
+
+    # print_path(prev, blocked, end_pos)
+    return dist[end_pos]
+
+
+def part_2(input_file: str, end_pos=(6, 6), start_after=1024):
+    global input_data
+    data_file = Path(__file__).with_name(input_file).read_text()
+    input_data = data_file.split("\n")
+    input_data = [list(map(int, row.split(","))) for row in input_data]
+    start_pos = (0, 0)
+
+    for after in range(start_after, len(input_data)):
+        blocked = [tuple(pos) for pos in input_data[:after]]
+        dist, prev = find_path(start_pos, end_pos, blocked)
+        # When there was no_path possible
+        if end_pos not in dist:
+            break
+    return str(input_data[after - 1][0]) + "," + str(input_data[after - 1][1])
 
 
 if __name__ == "__main__":
@@ -89,9 +103,10 @@ if __name__ == "__main__":
 
     # #### Part 2 ####
     print("#" * 10 + " Part 2 " + "#" * 10)
-    result = part_2("input_ex.txt")
-    print(result)
-    assert result == 1337
+    result_ex = part_2("input_ex.txt", end_pos=(6, 6), start_after=12)
+    print(result_ex)
+    assert result_ex == "6,1"
 
-    result = part_2("input.txt")
+    # Takes about 5min to run
+    result = part_2("input.txt", end_pos=(70, 70), start_after=1024)
     print(result)
