@@ -83,13 +83,22 @@ def part_2(input_file: str, end_pos=(6, 6), start_after=1024):
     input_data = [list(map(int, row.split(","))) for row in input_data]
     start_pos = (0, 0)
 
-    for after in range(start_after, len(input_data)):
-        blocked = [tuple(pos) for pos in input_data[:after]]
+    last_ind = len(input_data) - 1
+    begin_ind = start_after
+    middle = begin_ind + (last_ind - begin_ind) // 2
+    old = -1
+    while begin_ind <= last_ind:
+        middle = begin_ind + (last_ind - begin_ind) // 2
+        blocked = [tuple(pos) for pos in input_data[:middle]]
         dist, prev = find_path(start_pos, end_pos, blocked)
-        # When there was no_path possible
-        if end_pos not in dist:
+        if end_pos in prev:
+            begin_ind = middle
+        else:
+            last_ind = middle
+        if old == middle:
             break
-    return str(input_data[after - 1][0]) + "," + str(input_data[after - 1][1])
+        old = middle
+    return str(input_data[middle][0]) + "," + str(input_data[middle][1])
 
 
 if __name__ == "__main__":
