@@ -1,6 +1,8 @@
 from collections import Counter
+from itertools import combinations
 from pathlib import Path
 from queue import PriorityQueue
+from time import time
 
 input_data = []
 
@@ -63,21 +65,14 @@ def part_1(input_file: str, threshold: int = 100, cheat_size=2):
     path.append(start_pos)
 
     useful_cheats = Counter()
-    for i, pos in enumerate(reversed(path)):
-        # print(f"{i/len(path)*100:.2f}%")
-        y, x = pos
-        # Get all positions when moving at most `cheat_size` steps in any direction
-        new_pos_cheat_size = [
-            ((y + dy, x + dx), abs(dy) + abs(dx))
-            for dy in range(-cheat_size, cheat_size + 1)
-            for dx in range(-cheat_size, cheat_size + 1)
-            if abs(dy) + abs(dx) <= cheat_size and (y + dy, x + dx) in path
-        ]
-        for cheat_pos, size in new_pos_cheat_size:
-            better_steps = dist_base[cheat_pos] - (dist_base[pos] + size)
-            if better_steps >= threshold:
-                useful_cheats.update([better_steps])
-                # break
+    for new_pos, pos in combinations(path, 2):
+        # Manhattan distance
+        size = abs(pos[0] - new_pos[0]) + abs(pos[1] - new_pos[1])
+        if size > cheat_size:
+            continue
+        better_steps = dist_base[new_pos] - (dist_base[pos] + size)
+        if better_steps >= threshold:
+            useful_cheats.update([better_steps])
 
     # print(useful_cheats)
     return useful_cheats.total()
@@ -93,14 +88,17 @@ def get_path(prev, end_pos):
 
 if __name__ == "__main__":
     print("#" * 10 + " Part 1 " + "#" * 10)
+    start_time = time()
     result_ex = part_1("input_ex.txt", threshold=12)
     print(result_ex)
     assert result_ex == 8
 
     result = part_1("input.txt", threshold=100)
     print(result)
+    print(f"Part 1 took: {time() - start_time:.2f} seconds")
 
     # #### Part 2 ####
+    start_time = time()
     print("#" * 10 + " Part 2 " + "#" * 10)
     result = part_1("input_ex.txt", threshold=70, cheat_size=20)
     print(result)
@@ -108,3 +106,4 @@ if __name__ == "__main__":
 
     result = part_1("input.txt", threshold=100, cheat_size=20)
     print(result)
+    print(f"Part 2 took: {time() - start_time:.2f} seconds")
