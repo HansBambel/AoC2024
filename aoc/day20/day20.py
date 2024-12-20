@@ -1,7 +1,6 @@
 from collections import Counter
 from pathlib import Path
 from queue import PriorityQueue
-from tqdm import tqdm
 
 input_data = []
 
@@ -64,7 +63,8 @@ def part_1(input_file: str, threshold: int = 100, cheat_size=2):
     path.append(start_pos)
 
     useful_cheats = Counter()
-    for pos in tqdm(reversed(path), total=len(path)):
+    for i, pos in enumerate(reversed(path)):
+        # print(f"{i/len(path)*100:.2f}%")
         y, x = pos
         # Get all positions when moving at most `cheat_size` steps in any direction
         new_pos_cheat_size = [
@@ -79,7 +79,7 @@ def part_1(input_file: str, threshold: int = 100, cheat_size=2):
                 useful_cheats.update([better_steps])
                 # break
 
-    print(useful_cheats)
+    # print(useful_cheats)
     return useful_cheats.total()
 
 
