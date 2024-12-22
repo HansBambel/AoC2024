@@ -26,9 +26,9 @@ if __name__ == "__main__":
 
     # #### Part 2 ####
     print("#" * 10 + " Part 2 " + "#" * 10)
-    result = part_2("input_ex.txt")
-    print(result)
-    assert result == 1337
+    result_ex = part_2("input_ex.txt")
+    print(result_ex)
+    assert result_ex == 1337
 
     result = part_2("input.txt")
     print(result)
