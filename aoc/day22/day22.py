@@ -35,6 +35,12 @@ def find_prices_with_sequence(sequence: tuple[int, int, int, int]) -> int:
     return total
 
 
+def price_of_sequence_of_changes(
+    sequence: tuple[int, int, int, int], number: int
+) -> int | None:
+    pass
+
+
 def part_2(input_file: str):
     global input_data
     global changes
@@ -44,7 +50,8 @@ def part_2(input_file: str):
     input_data = [int(x) for x in input_data]
     secret_numbers = []
     changes = []
-    for number in input_data:
+    bananas_gained = {}
+    for n_i, number in enumerate(input_data):
         new_secret_numbers = [number % 10]
         changes_number = []
         for i in range(2000):
@@ -53,23 +60,26 @@ def part_2(input_file: str):
             number = (number ^ number * 2048) % 16777216
             new_secret_numbers.append(number % 10)
             changes_number.append(new_secret_numbers[-1] - new_secret_numbers[-2])
+            if i > 3:
+                sequence = (
+                    changes_number[i - 3],
+                    changes_number[i - 2],
+                    changes_number[i - 1],
+                    changes_number[i],
+                )
+                bananas = number % 10
+                if (input_data[n_i], sequence) not in bananas_gained:
+                    bananas_gained[(input_data[n_i], sequence)] = bananas
         secret_numbers.append(new_secret_numbers)
         changes.append(changes_number)
 
     # go through the
     best_price = 0
-    for s_i, changes_secret in enumerate(changes):
-        print(f"{s_i/len(changes)*100:.2f}%")
-        for i in range(4, 2000):
-            sequence = (
-                changes_secret[i - 4],
-                changes_secret[i - 3],
-                changes_secret[i - 2],
-                changes_secret[i - 1],
-            )
-            price = find_prices_with_sequence(sequence)
-            if price > best_price:
-                best_price = price
+    for i, ((_, sequence), bananas) in enumerate(bananas_gained.items()):
+        print(f"{i/len(bananas_gained)*100:.2f}%")
+        price = sum(bananas_gained.get((number, sequence), 0) for number in input_data)
+        if price > best_price:
+            best_price = price
 
     return best_price
 
