@@ -1,9 +1,7 @@
-from functools import cache
+from collections import defaultdict
 from pathlib import Path
 
 input_data = []
-changes = []
-secret_numbers = []
 
 
 def part_1(input_file: str):
@@ -22,29 +20,8 @@ def part_1(input_file: str):
     return sum(secret_numbers)
 
 
-@cache
-def find_prices_with_sequence(sequence: tuple[int, int, int, int]) -> int:
-    total = 0
-    # go through all changes of all secret numbers
-    for s_i, secret_changes in enumerate(changes):
-        # Get the occurrence
-        for i in range(4, len(secret_changes)):
-            if tuple(secret_changes[i - 4 : i]) == sequence:
-                total += secret_numbers[s_i][i]
-                break
-    return total
-
-
-def price_of_sequence_of_changes(
-    sequence: tuple[int, int, int, int], number: int
-) -> int | None:
-    pass
-
-
 def part_2(input_file: str):
     global input_data
-    global changes
-    global secret_numbers
     data_file = Path(__file__).with_name(input_file).read_text()
     input_data = data_file.split("\n")
     input_data = [int(x) for x in input_data]
@@ -73,13 +50,16 @@ def part_2(input_file: str):
         secret_numbers.append(new_secret_numbers)
         changes.append(changes_number)
 
-    # go through the
-    best_price = 0
-    for i, ((_, sequence), bananas) in enumerate(bananas_gained.items()):
-        print(f"{i/len(bananas_gained)*100:.2f}%")
-        price = sum(bananas_gained.get((number, sequence), 0) for number in input_data)
-        if price > best_price:
-            best_price = price
+    best_price_per_pattern = defaultdict(int)
+    for n_i, number in enumerate(input_data):
+        seen = set()
+        for i in range(len(changes[n_i]) - 4):
+            sequence = tuple(changes[n_i][i : i + 4])
+
+            if sequence not in seen:
+                best_price_per_pattern[sequence] += secret_numbers[n_i][i + 4]
+                seen.add(sequence)
+    best_price = max(best_price_per_pattern.values())
 
     return best_price
 
