@@ -39,8 +39,16 @@ def part_2(input_file: str):
     for comp1, comp2 in connections:
         computer_connected[comp1].add(comp2)
         computer_connected[comp2].add(comp1)
-    for comp, connected in computer_connected.items():
-        pass
+
+    connected = [{comp} for comp in computer_connected.keys()]
+    for sub_con in connected:
+        for comp, connected_comps in computer_connected.items():
+            if all(other_comp in connected_comps for other_comp in sub_con):
+                sub_con.add(comp)
+
+    # get largest sub_network
+    largest_network = max(connected, key=len)
+    return ",".join(sorted(largest_network))
 
 
 if __name__ == "__main__":
