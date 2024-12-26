@@ -1,4 +1,5 @@
 import re
+from functools import cache
 from itertools import permutations
 from pathlib import Path
 from queue import PriorityQueue
@@ -27,9 +28,9 @@ dirpad = {
 }
 
 
-def calc_complexity(codes: dict[str, str]) -> int:
+def calc_complexity(codes: dict[str, list[str]]) -> int:
     complexity = [
-        len(sequence) * int(re.sub(r"[A-Z]", "", code))
+        len(sequence[0]) * int(re.sub(r"[A-Z]", "", code))
         for code, sequence in codes.items()
     ]
     return sum(complexity)
@@ -55,7 +56,7 @@ def get_dir2keypad_inputs(code: str) -> list[str]:
     possible_paths = [""]
     for c in code:
         next_move = keypad[c]
-        ways = shortest_keypad[(next_move, cur_pos)]
+        ways = shortest_keypad[(cur_pos, next_move)]
         possible_paths = [
             old_path + way + "A" for old_path in possible_paths for way in ways
         ]
@@ -63,20 +64,26 @@ def get_dir2keypad_inputs(code: str) -> list[str]:
     return possible_paths
 
 
-def get_dir2dirpad_inputs(code: str) -> list[str]:
+@cache
+def get_dir2dirpad_inputs(code: str, depth: int) -> int:
+    if depth == 0:
+        return len(code)
     cur_pos = (0, 2)
-    possible_paths = [""]
-    for c in code:
-        next_move = dirpad[c]
-        if next_move == cur_pos:
-            possible_paths = [old_path + "A" for old_path in possible_paths]
-        else:
-            ways = shortest_dirpad[(next_move, cur_pos)]
-            possible_paths = [
-                old_path + way + "A" for old_path in possible_paths for way in ways
-            ]
-        cur_pos = next_move
-    return possible_paths
+    total_length = 0
+    for sub_code in code.split("A"):
+        for c in sub_code + "A":
+            next_move = dirpad[c]
+            if cur_pos == next_move:
+                ways = [""]
+            else:
+                ways = shortest_dirpad[(next_move, cur_pos)]
+            shortest = 1e9
+            for way in ways:
+                new_code = way + "A"
+                shortest = min(shortest, get_dir2dirpad_inputs(new_code, depth - 1))
+            total_length += shortest
+            cur_pos = next_move
+    return total_length - 1
 
 
 def get_path(
@@ -130,6 +137,7 @@ def get_paths(
     return paths
 
 
+@cache
 def is_optimal(sequence: str) -> bool:
     for sub_seq in sequence.split("A"):
         for i, char in enumerate(sub_seq):
@@ -150,72 +158,37 @@ def optimize_paths(paths: list[str]) -> list[str]:
     min_len = min(path_len)
     optimal_paths = [path for path, length in zip(paths, path_len) if length == min_len]
 
-    # TODO remove those with the same directions not together
+    # remove those with the same directions not together
     optimal_paths = [p for p in optimal_paths if is_optimal(p)]
     return optimal_paths
-
-
-def move(start_move: str, end_move: str, pad: dict[str, tuple[int, int]]) -> str:
-    start_pos = pad[start_move]
-    end_pos = pad[end_move]
-    d_y = start_pos[0] - end_pos[0]
-    d_x = start_pos[1] - end_pos[1]
-    vert_move = "^" * d_y + "v" * -d_y
-    hor_move = "<" * d_x + ">" * -d_x
-    # When moving left: check if the tile that is moved over exists
-    if "<" in hor_move and (start_pos[0], end_pos[1]) not in pad.values():
-        moves = vert_move + hor_move
-    # elif ">" in hor_move and start_pos[1] == 0:
-    #     moves = hor_move + vert_move
-    else:
-        moves = hor_move + vert_move
-    return moves + "A"
-
-
-def enter_code(code: str, pad: dict[str, tuple[int, int]]) -> str:
-    cur_char = "A"
-    sequence = ""
-    for next_char in code:
-        sequence += move(cur_char, next_char, pad)
-        cur_char = next_char
-    return sequence
 
 
 def part_1(input_file: str, dir_pads: int = 3):
     global input_data
     data_file = Path(__file__).with_name(input_file).read_text()
     input_data = data_file.split("\n")
-    codes = {}
 
     for start, end in permutations(keypad.values(), 2):
         new_paths = get_paths(start, end, keypad)
         new_paths_optimized = optimize_paths(new_paths)
-        shortest_keypad[(start, end)] = new_paths_optimized
-        # TODO optimize here: prefer those that have the same directions together
+        shortest_keypad[(end, start)] = new_paths_optimized
 
     for start, end in permutations(dirpad.values(), 2):
         new_paths = get_paths(end, start, dirpad)
         new_paths_optimized = optimize_paths(new_paths)
-        shortest_dirpad[(start, end)] = new_paths_optimized
-    codes = {code: None for code in input_data}
+        shortest_dirpad[(end, start)] = new_paths_optimized
 
-    best_paths = {}
-    for code in codes.keys():
+    total_complexity = 0
+    for code in input_data:
         cur_codes = get_dir2keypad_inputs(code)
 
-        for i in range(dir_pads):
-            print(i, len(cur_codes))
-            new_codes = []
-            for j, c in enumerate(cur_codes):
-                print(f"{j/len(cur_codes):.2%}", end="\r")
-                new_codes.extend(get_dir2dirpad_inputs(c))
-            cur_codes = optimize_paths(new_codes)
-        best_paths[code] = cur_codes
+        min_length = 1e9
+        for cur_code in cur_codes:
+            seq_len = get_dir2dirpad_inputs(cur_code, dir_pads - 1)
+            min_length = min(min_length, seq_len)
+        total_complexity += int(re.sub(r"[A-Z]", "", code)) * min_length
 
-    complexity = calc_complexity(codes)
-
-    complexity = sum(code * length for code, length in codes.items())
-    return complexity
+    return total_complexity
 
 
 def part_2(input_file: str):
@@ -236,9 +209,6 @@ if __name__ == "__main__":
 
     # #### Part 2 ####
     print("#" * 10 + " Part 2 " + "#" * 10)
-    result = part_2("input_ex.txt")
-    print(result)
-    assert result == 1337
 
-    result = part_2("input.txt")
+    result = part_1("input.txt", dir_pads=25)
     print(result)
