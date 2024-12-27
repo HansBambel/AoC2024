@@ -77,7 +77,7 @@ def get_dir2dirpad_inputs(code: str, depth: int) -> int:
                 ways = [""]
             else:
                 ways = shortest_dirpad[(next_move, cur_pos)]
-            shortest = 1e9
+            shortest = 1e128
             for way in ways:
                 new_code = way + "A"
                 shortest = min(shortest, get_dir2dirpad_inputs(new_code, depth - 1))
@@ -178,23 +178,18 @@ def part_1(input_file: str, dir_pads: int = 3):
         new_paths_optimized = optimize_paths(new_paths)
         shortest_dirpad[(end, start)] = new_paths_optimized
 
-    total_complexity = 0
+    total_complexity = {}
     for code in input_data:
         cur_codes = get_dir2keypad_inputs(code)
 
-        min_length = 1e9
+        min_length = 1e128
         for cur_code in cur_codes:
             seq_len = get_dir2dirpad_inputs(cur_code, dir_pads - 1)
             min_length = min(min_length, seq_len)
-        total_complexity += int(re.sub(r"[A-Z]", "", code)) * min_length
+        total_complexity[code] = int(re.sub(r"[A-Z]", "", code)) * min_length
 
-    return total_complexity
-
-
-def part_2(input_file: str):
-    global input_data
-    data_file = Path(__file__).with_name(input_file).read_text()
-    input_data = data_file.split("\n")
+    print(total_complexity)
+    return sum(total_complexity.values())
 
 
 if __name__ == "__main__":
@@ -210,5 +205,6 @@ if __name__ == "__main__":
     # #### Part 2 ####
     print("#" * 10 + " Part 2 " + "#" * 10)
 
-    result = part_1("input.txt", dir_pads=25)
+    result = part_1("input.txt", dir_pads=26)
     print(result)
+    assert result > 92477346276378
